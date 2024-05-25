@@ -1,3 +1,4 @@
+import 'package:alerta_dengue/pages/result.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -64,8 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   color:Colors.grey,
                   fontFamily: 'Lexend',
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
             ),
             const SizedBox(height: 10),
@@ -115,7 +115,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _resultBtn(){
     return ElevatedButton(
-      onPressed: (){}, // Get Result action
+      onPressed: (){
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ResultScreen(
+              disease: diseaseController.text,
+              startDate: sdateController.text,
+              endDate: edateController.text,
+              stateCode: stateController.text,
+              cityCode: cityController.text,
+            )
+        )
+      );
+      }, // Get Result action
       style: ElevatedButton.styleFrom(
         backgroundColor: Color.fromARGB(255, 109, 49, 237),
       ),
