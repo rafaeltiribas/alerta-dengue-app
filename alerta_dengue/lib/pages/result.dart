@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:csv/csv.dart';
 
 class ResultScreen extends StatefulWidget {
   final String disease;
@@ -17,26 +19,47 @@ class ResultScreen extends StatefulWidget {
 
   @override
   // ignore: library_private_types_in_public_api, no_logic_in_create_state
-  _ResultScreenState createState() => _ResultScreenState(disease:  disease, 
-    startDate: startDate, endDate: endDate, stateCode: stateCode, cityCode: cityCode);
+  _ResultScreenState createState() => _ResultScreenState();
 }
 
 class _ResultScreenState extends State<ResultScreen> {
 
-  final String disease;
-  final String startDate;
-  final String endDate;
-  final String stateCode;
-  final String cityCode;
+  List<List<dynamic>>? _csvData;
 
-  _ResultScreenState({
-    required this.disease,
-    required this.startDate,
-    required this.endDate,
-    required this.stateCode,
-    required this.cityCode,
-  });
+  Future<void> fetchData() async {
+    // ignore: prefer_const_declarations
+    final url = 'https://info.dengue.mat.br/api/alertcity';
+    final searchFilter =
+      'geocode=${widget.cityCode}&disease=${widget.disease}&format=csv&' +
+      'ew_start=1&ew_end=50&ey_start=${widget.startDate}&ey_end=${widget.endDate}';
 
+    final fullUrl = Uri.parse('$url?$searchFilter');
+
+    try {
+      final response = await http.get(fullUrl);
+
+      if (response.statusCode == 200) {
+        // Process the CSV response
+        final csvData = const CsvToListConverter().convert(response.body);
+        setState(() {
+          _csvData = csvData;
+        });
+      } else {
+        // Handle the error
+        print('Request failed with status: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Handle the exception
+      print('An error occurred: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,7 +88,7 @@ class _ResultScreenState extends State<ResultScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
                Text(
-                'Disease: $disease',
+                'Disease: ${widget.disease}',
                 style: const TextStyle(
                   color: Color.fromARGB(255, 0, 0, 0),
                   fontFamily: 'Lexend',
@@ -74,7 +97,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
             ),
              Text(
-                'Start Date: $startDate',
+                'Start Date: ${widget.startDate}',
                 style: const TextStyle(
                   color: Color.fromARGB(255, 0, 0, 0),
                   fontFamily: 'Lexend',
@@ -83,7 +106,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
             ),
              Text(
-                'End Date: $endDate',
+                'End Date: ${widget.endDate}',
                 style: const TextStyle(
                   color: Color.fromARGB(255, 0, 0, 0),
                   fontFamily: 'Lexend',
@@ -92,7 +115,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
             ),
              Text(
-                'State Code: $stateCode',
+                'State Code: ${widget.stateCode}',
                 style: const TextStyle(
                   color: Color.fromARGB(255, 0, 0, 0),
                   fontFamily: 'Lexend',
@@ -101,7 +124,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
             ),
              Text(
-                'City Code: $cityCode',
+                'City Code: ${widget.cityCode}',
                 style: const TextStyle(
                   color: Color.fromARGB(255, 0, 0, 0),
                   fontFamily: 'Lexend',
