@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:csv/csv.dart';
+import 'package:alerta_dengue/models/dengue_model.dart';
+import 'dart:convert';
+import 'dart:async';
 
 class ResultScreen extends StatefulWidget {
   final String disease;
@@ -24,42 +26,40 @@ class ResultScreen extends StatefulWidget {
 
 class _ResultScreenState extends State<ResultScreen> {
 
-  List<List<dynamic>>? _csvData;
+  late Future<Dengue> futureDengue;
 
-  Future<void> fetchData() async {
-    // ignore: prefer_const_declarations
-    final url = 'https://info.dengue.mat.br/api/alertcity';
+  Future<Dengue> fetchDengue() async {
+
+    const url = 'https://info.dengue.mat.br/api/alertcity';
     final searchFilter =
-      'geocode=${widget.cityCode}&disease=${widget.disease}&format=csv&' +
+      'geocode=${widget.cityCode}&disease=${widget.disease}&format=json&' +
       'ew_start=1&ew_end=50&ey_start=${widget.startDate}&ey_end=${widget.endDate}';
 
     final fullUrl = Uri.parse('$url?$searchFilter');
+    
 
-    try {
-      final response = await http.get(fullUrl);
+    final response = await http.get(fullUrl);
 
-      if (response.statusCode == 200) {
-        // Process the CSV response
-        final csvData = const CsvToListConverter().convert(response.body);
-        setState(() {
-          _csvData = csvData;
-        });
-      } else {
-        // Handle the error
-        print('Request failed with status: ${response.statusCode}');
-      }
-    } catch (e) {
-      // Handle the exception
-      print('An error occurred: $e');
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+
+      print(fullUrl);
+      print(Dengue.fromJson(jsonDecode(response.body) as Map<String, dynamic>));
+      return Dengue.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load dengue');
     }
   }
 
   @override
   void initState() {
     super.initState();
-    fetchData();
+    futureDengue = fetchDengue();
   }
-  
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,59 +81,19 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   _buildBody() {
-    return Padding(
-      padding: EdgeInsets.all(20.0),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-               Text(
-                'Disease: ${widget.disease}',
-                style: const TextStyle(
-                  color: Color.fromARGB(255, 0, 0, 0),
-                  fontFamily: 'Lexend',
-                  fontSize: 22,
-                  //fontWeight: FontWeight.bold,
-                ),
-            ),
-             Text(
-                'Start Date: ${widget.startDate}',
-                style: const TextStyle(
-                  color: Color.fromARGB(255, 0, 0, 0),
-                  fontFamily: 'Lexend',
-                  fontSize: 22,
-                  //fontWeight: FontWeight.bold,
-                ),
-            ),
-             Text(
-                'End Date: ${widget.endDate}',
-                style: const TextStyle(
-                  color: Color.fromARGB(255, 0, 0, 0),
-                  fontFamily: 'Lexend',
-                  fontSize: 22,
-                  //fontWeight: FontWeight.bold,
-                ),
-            ),
-             Text(
-                'State Code: ${widget.stateCode}',
-                style: const TextStyle(
-                  color: Color.fromARGB(255, 0, 0, 0),
-                  fontFamily: 'Lexend',
-                  fontSize: 22,
-                  //fontWeight: FontWeight.bold,
-                ),
-            ),
-             Text(
-                'City Code: ${widget.cityCode}',
-                style: const TextStyle(
-                  color: Color.fromARGB(255, 0, 0, 0),
-                  fontFamily: 'Lexend',
-                  fontSize: 22,
-                  //fontWeight: FontWeight.bold,
-                ),
-            ),
-        ],),
-      ),
-    );
+    return Center(
+          child: FutureBuilder<Dengue>(
+            future: futureDengue,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return Text(snapshot.data!.casos as String);
+              } else if (snapshot.hasError) {
+                return Text('${snapshot.error}');
+              }
+              // By default, show a loading spinner.
+              return const CircularProgressIndicator();
+            },
+          ),
+        );
   }
 }
