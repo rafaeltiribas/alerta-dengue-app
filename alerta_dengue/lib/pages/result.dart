@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:alerta_dengue/models/dengue_model.dart';
@@ -39,14 +40,14 @@ class _ResultScreenState extends State<ResultScreen> {
     
 
     final response = await http.get(fullUrl);
+    
 
     if (response.statusCode == 200) {
+      var decodedResponse = jsonDecode(response.body);
       // If the server did return a 200 OK response,
       // then parse the JSON.
-
-      print(fullUrl);
-      print(Dengue.fromJson(jsonDecode(response.body) as Map<String, dynamic>));
-      return Dengue.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+      // List<Dengue> dengueList = decodedResponse.map((item) => Dengue.fromJson(item as Map<String, dynamic>)).toList();
+      return Dengue.fromJson(decodedResponse[0] as Map<String, dynamic>);
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
@@ -86,7 +87,7 @@ class _ResultScreenState extends State<ResultScreen> {
             future: futureDengue,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                return Text(snapshot.data!.casos as String);
+                return Text(snapshot.data!.casos.toString());
               } else if (snapshot.hasError) {
                 return Text('${snapshot.error}');
               }
