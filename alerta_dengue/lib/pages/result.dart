@@ -28,8 +28,9 @@ class ResultScreen extends StatefulWidget {
 class _ResultScreenState extends State<ResultScreen> {
 
   late Future<Dengue> futureDengue;
+  int week = 0;
 
-  Future<Dengue> fetchDengue() async {
+  Future<Dengue> fetchDengue(int week) async {
 
     const url = 'https://info.dengue.mat.br/api/alertcity';
     final searchFilter =
@@ -44,10 +45,11 @@ class _ResultScreenState extends State<ResultScreen> {
 
     if (response.statusCode == 200) {
       var decodedResponse = jsonDecode(response.body);
+      print(decodedResponse.length);
       // If the server did return a 200 OK response,
       // then parse the JSON.
       // List<Dengue> dengueList = decodedResponse.map((item) => Dengue.fromJson(item as Map<String, dynamic>)).toList();
-      return Dengue.fromJson(decodedResponse[0] as Map<String, dynamic>);
+      return Dengue.fromJson(decodedResponse[week] as Map<String, dynamic>);
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
@@ -58,7 +60,7 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   void initState() {
     super.initState();
-    futureDengue = fetchDengue();
+    futureDengue = fetchDengue(week);
   }
  
   @override
@@ -87,7 +89,8 @@ class _ResultScreenState extends State<ResultScreen> {
             future: futureDengue,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                return Text(snapshot.data!.casos.toString());
+                // Display dados da semana 1
+                return _resultField(snapshot);
               } else if (snapshot.hasError) {
                 return Text('${snapshot.error}');
               }
@@ -96,5 +99,145 @@ class _ResultScreenState extends State<ResultScreen> {
             },
           ),
         );
+  }
+
+/*
+  Widget _resultField(AsyncSnapshot<Dengue> snapshot){
+    return Padding(
+      padding: const EdgeInsets.all(60.0),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(snapshot.data!.casos.toString()),
+            Text(snapshot.data!.casosEst.toString()),
+            Text(snapshot.data!.casosNot.toString()),
+            Text(snapshot.data!.nivel.toString()),
+            Text(snapshot.data!.tempMin.toStringAsFixed(2)),
+            Text(snapshot.data!.tempMax.toStringAsFixed(2)),
+            Text((week+1).toString()),
+            const SizedBox(height: 40),
+            _weekBtn("Next week", 1),
+            const SizedBox(height: 20),
+            _weekBtn("Last week", -1),
+        ],),
+        ),
+    );
+  }
+*/
+
+  Widget _resultField(AsyncSnapshot<Dengue> snapshot) {
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        border: Border.all(color: Color.fromARGB(255, 109, 49, 237), width: 2.0),
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Dengue",
+            style: TextStyle(
+              color: Color.fromARGB(255, 109, 49, 237),
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8.0),
+          Text(
+            "Nível: ${snapshot.data!.nivel}",
+            style: TextStyle(
+              color: Color.fromARGB(255, 109, 49, 237),
+              fontSize: 16.0,
+            ),
+          ),
+          SizedBox(height: 16.0),
+          Text(
+            "Rio de Janeiro",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 18.0,
+            ),
+          ),
+          SizedBox(height: 4.0),
+          Text(
+            "${snapshot.data!.casosNot} casos notificados",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8.0),
+          Text(
+            "${snapshot.data!.casos} casos",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16.0,
+            ),
+          ),
+          SizedBox(height: 4.0),
+          Text(
+            "${snapshot.data!.casosEst} casos estimados",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16.0,
+            ),
+          ),
+          SizedBox(height: 4.0),
+          Text(
+            "${snapshot.data!.tempMax.toStringAsFixed(2)} temperatura máxima",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16.0,
+            ),
+          ),
+          SizedBox(height: 4.0),
+          Text(
+            "${snapshot.data!.tempMin.toStringAsFixed(2)} temperatura mínima",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16.0,
+            ),
+          ),
+          SizedBox(height: 16.0),
+          const SizedBox(height: 40),
+          _weekBtn("Next week", 1),
+          const SizedBox(height: 20),
+          _weekBtn("Last week", -1),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _weekBtn(String label, int signal){
+    return ElevatedButton(
+      onPressed: (){
+        setState(() {
+          week += 1 * (signal);
+          if(week < 0){week = 0;}
+          if(week > 24){week = 25;}
+          futureDengue = fetchDengue(week);
+        });
+      }, 
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color.fromARGB(255, 109, 49, 237),
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 20,
+            fontFamily: 'Lexend',
+            color: Colors.white,
+          ),
+        ),
+      )
+    );
   }
 }
