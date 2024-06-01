@@ -138,7 +138,7 @@ class _ResultScreenState extends State<ResultScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Dengue",
+            capitalizeFirstLetter(widget.disease),
             style: TextStyle(
               color: Color.fromARGB(255, 109, 49, 237),
               fontSize: 24.0,
@@ -147,10 +147,11 @@ class _ResultScreenState extends State<ResultScreen> {
           ),
           SizedBox(height: 8.0),
           Text(
-            "Nível: ${snapshot.data!.nivel}",
+            "Level: ${snapshot.data!.nivel}",
             style: TextStyle(
-              color: Color.fromARGB(255, 109, 49, 237),
+              color: Color.fromARGB(255, 0, 0, 0),
               fontSize: 16.0,
+              fontWeight: FontWeight.bold,
             ),
           ),
           SizedBox(height: 16.0),
@@ -240,4 +241,11 @@ class _ResultScreenState extends State<ResultScreen> {
       )
     );
   }
+}
+
+String capitalizeFirstLetter(String input) {
+  if (input.isEmpty) {
+    return input;
+  }
+  return input[0].toUpperCase() + input.substring(1);
 }
